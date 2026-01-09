@@ -458,21 +458,20 @@ body.history-open #historyContainer {
 
 /* ===== TERMINAL LOCK ===== */
 
-const TERMINAL_URL = "https://script.google.com/macros/s/AKfycbx3KTxP86Nh2yYn4TDqA5tBBMFqsNA1v0ZGk9IKUIVNTpaDs7LOAnrRK_6hC89WOCKb6Q/exec";
-const FIXED_OUTLET = "ABE Trinoma";
-const TERMINAL_ID = "ABE_TRINOMA_POS01";
 const API_KEY = "CPCC_LJC_2026_PRIVATE_KEY";
+const TERMINAL_URL = "https://script.google.com/macros/s/AKfycbwrrWKnGULDg5LRQJwpC2pXD_FBmKsmXwDAl7ZdBy2vYbGfbB8HeJDToPuVNJ4ssTAIkw/exec";
+const TERMINAL_ID = "ABE_TRINOMA_POS01"; // your fixed terminal
+const FIXED_OUTLET = "ABE Trinoma";           // example outlet name
 
-// -------------------
-// Terminal License Check
-// -------------------
 async function checkTerminal() {
   try {
-    const res = await fetch(`${TERMINAL_URL}?apiKey=${API_KEY}`);
+    const url = `${TERMINAL_URL}?apiKey=${API_KEY}`;
+    const res = await fetch(url);
     const data = await res.json();
 
     const today = new Date();
 
+    // Find the matching terminal
     const row = data.find(r =>
       r.outlet === FIXED_OUTLET &&
       r.terminal === TERMINAL_ID &&
@@ -497,43 +496,16 @@ async function checkTerminal() {
                   font-size:28px;text-align:center;">
         LICENSE SERVER UNREACHABLE
       </div>`;
+    console.error("Terminal check failed:", e);
     throw e;
   }
 }
-
-// -------------------
-// PIN Validation
-// -------------------
-async function validatePin() {
-  const pin = document.getElementById("pinInput").value;
-
-  try {
-    const res = await fetch(`${TERMINAL_URL}?action=validatePin&pin=${pin}&apiKey=${API_KEY}`);
-    const result = await res.json();
-
-    if (result.valid) {
-      document.getElementById("pinModal").style.display = "none";
-      startApp(); // system starts
-    } else {
-      alert("Incorrect PIN!");
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Server error. Try again.");
-  }
-}
-
-// -------------------
-// Attach submit button
-// -------------------
-document.getElementById("pinSubmit").addEventListener("click", validatePin);
-
 
 // =========================
 // 🚀 INIT
 // =========================
 (async () => {
-  await checkTerminal(); // first, verify terminal is active
+  await checkTerminal(); // verify terminal is active first
 })();
 
 
