@@ -937,7 +937,7 @@ async function fetchHistory(){
     return;
   }
 
-  historyBody.innerHTML = "<tr><td colspan='7'>Loading...</td></tr>";
+  historyBody.innerHTML = "<tr><td colspan="8">Loading...</td></tr>";
 
   try {
     const res  = await fetch(HISTORY_URL + "?apiKey=" + API_KEY);
@@ -1013,15 +1013,15 @@ async function fetchHistory(){
   // ✅ ADD THIS BLOCK
   if (!Object.keys(grouped).length) {
     historyBody.innerHTML =
-      "<tr><td colspan='7'>No records found</td></tr>";
+      "<tr><td colspan="8">No records found</td></tr>";
   }
 
-} catch (e) {
-  console.error(e);
-  alert("Failed to fetch history");
-}
-}
+    catch (e) {
+    console.error(e);
+    alert("Failed to fetch history");
+  }
 
+</script>
 
 <script>
 async function startApp() {
@@ -1058,8 +1058,7 @@ async function fetchMenu() {
       MENU[c].sort((a,b)=> a.name.localeCompare(b.name));
     }
 
-    renderCategories();
-    
+        
   } catch(e) {
     console.error(e);
     alert("Failed to fetch Menu List");
