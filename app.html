@@ -1024,9 +1024,15 @@ async function fetchHistory(){
 </script>
 
 <script>
+<script>
 async function startApp() {
-  console.log("🚀 App started");
+  await Promise.all([
+    fetchCPCCUsers(),
+    fetchMenu()
+  ]);
+  
 }
+
 
 
 
