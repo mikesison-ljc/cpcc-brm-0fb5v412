@@ -456,10 +456,12 @@ body.history-open #historyContainer {
 
 <script>
 
-/* ===== TERMINAL LOCK ===== */
+<script>
+/* ===== TERMINAL LOCK (JSONP) ===== */
 
 const API_KEY = "CPCC_LJC_2026_PRIVATE_KEY";
-const TERMINAL_URL = "https://script.google.com/macros/s/AKfycbyCNFUgz9e8Xubl4kQpQw8W9iP-vFSzJvZUV88u7Mlg8Gswr_veBzpgQM-pTGH0kbebeg/exec";
+const TERMINAL_URL =
+  "https://script.google.com/macros/s/AKfycbym9Dbu8eleTduaKFc_9Td9rzBgiCwtD4sn4lc5drQhZQlnXvli_UIeFPTjb8JhU5k-uw/exec";
 
 const TERMINAL_ID = "ABE_TRINOMA_POS01";
 const FIXED_OUTLET = "ABE Trinoma";
@@ -475,29 +477,16 @@ function showScreen(msg) {
     </div>`;
 }
 
-async function checkTerminal() {
+/* ============================= */
+/* 🌍 JSONP CALLBACK            */
+/* ============================= */
+function terminalCallback(payload) {
   try {
-    const url = `${TERMINAL_URL}?apiKey=${encodeURIComponent(API_KEY)}`;
-    const res = await fetch(url, { method: "GET" });
-
-    if (!res.ok) {
-      throw new Error("HTTP_" + res.status);
+    if (!payload || !payload.ok) {
+      throw payload?.error || "SERVER_ERROR";
     }
 
-    const raw = await res.text();
-
-    let payload;
-    try {
-      payload = JSON.parse(raw);
-    } catch {
-      throw new Error("INVALID_JSON");
-    }
-
-    if (!payload.ok) {
-      throw new Error(payload.error || "SERVER_ERROR");
-    }
-
-    const list = payload.terminals;
+    const list = payload.terminals || [];
     const today = new Date();
 
     const row = list.find(r =>
@@ -509,7 +498,7 @@ async function checkTerminal() {
 
     if (!row) {
       showScreen("TERMINAL DISABLED<br><br>Contact Head Office");
-      throw "TERMINAL_DISABLED";
+      return;
     }
 
     console.log("✅ Terminal validated");
@@ -517,16 +506,27 @@ async function checkTerminal() {
   } catch (err) {
     showScreen("LICENSE SERVER UNREACHABLE");
     console.error("❌ Terminal check failed:", err);
-    throw err;
   }
 }
 
 /* ============================= */
-/* 🚀 INIT                       */
+/* 🚀 LOAD JSONP                */
 /* ============================= */
-(async () => {
-  await checkTerminal();
+(function checkTerminal() {
+  const script = document.createElement("script");
+
+  script.src =
+    TERMINAL_URL +
+    "?apiKey=" + encodeURIComponent(API_KEY) +
+    "&callback=terminalCallback";
+
+  script.onerror = () => {
+    showScreen("LICENSE SERVER UNREACHABLE");
+  };
+
+  document.head.appendChild(script);
 })();
+</script>
 
 
 /* ===== DATA ===== */
