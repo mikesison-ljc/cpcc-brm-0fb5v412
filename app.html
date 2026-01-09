@@ -1048,18 +1048,6 @@ async function fetchHistory(){
 </script>
 
 <script>
-async function startApp() {
-  await Promise.all([
-    fetchCPCCUsers(),
-    fetchMenu()
-  ]);
-  
-}
-
-
-
-
-
 /* ===== INIT ===== */
 let MENU = {}; // will be populated dynamically from the Sheet
 
@@ -1110,10 +1098,6 @@ function renderCategories() {
 }
 
 
-function showCategories() {
-  renderCategories();
-}
-
 
 // Show items in menuGrid
 function showCategory(c) {
@@ -1160,7 +1144,13 @@ function showCategories() {
   renderCategories();
 }
 
-
+async function startApp() {
+  await Promise.all([
+    fetchCPCCUsers(),
+    fetchMenu()
+  ]);
+  renderCategories();   // 👈 REQUIRED
+}
 
 
 let activeInput = null;
