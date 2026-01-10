@@ -466,7 +466,7 @@ body.history-open #historyContainer {
 
 const API_KEY = "CPCC_LJC_2026_PRIVATE_KEY";
 const TERMINAL_URL =
-  "https://script.google.com/macros/s/AKfycbylblUuKDMXCloej0TU5yn4C1ypzttSuot9Mg8NFQPJoQyy-zaIm8jl9FmwrhSkFgS_Cw/exec";
+  "https://script.google.com/macros/s/AKfycbwFE9AxhjeiXTp92mWbVKP3zaqE2lNmcweyP5ZJ5XhshPNmpbjNvTW2x81l1s0hPPLplA/exec";
 
 const TERMINAL_ID = "ABE_TRINOMA_POS01";
 const FIXED_OUTLET = "ABE Trinoma";
@@ -518,8 +518,9 @@ function terminalCallback(payload) {
   s.src =
     TERMINAL_URL +
     "?apiKey=" + encodeURIComponent(API_KEY) +
-    "&action=checkTerminal" +
-    "&callback=terminalCallback";
+    "&action=validatePin" +
+    "&terminal=" + encodeURIComponent(TERMINAL_ID) +
+    "&callback=terminalPinCallback";
 
   s.onerror = () => showScreen("LICENSE SERVER UNREACHABLE");
   document.head.appendChild(s);
@@ -541,17 +542,28 @@ window.startApp = function() {
 
 function terminalPinCallback(res) {
   if (!res.ok) {
-    alert("PIN server error");
+    alert("PIN server unreachable");
     return;
   }
 
   if (res.valid) {
-    document.getElementById("pinModal").style.display = "none";
-    startApp();   // 🚀 APP STARTS HERE
-  } else {
-    alert("Incorrect PIN!");
+    startApp();
+    return;
   }
+
+  if (res.error === "LOCKED") {
+    alert(`Too many attempts. Try again in ${res.retryAfterMinutes} minutes.`);
+    return;
+  }
+
+  if (res.error === "TOO_MANY_ATTEMPTS") {
+    alert(`Too many attempts. Locked for ${res.lockedMinutes} minutes.`);
+    return;
+  }
+
+  alert("Incorrect PIN");
 }
+
 
 function validatePin() {
   const pin = document.getElementById("pinInput").value;
