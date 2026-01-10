@@ -8,7 +8,7 @@ if (!sessionStorage.getItem("cpcc_session")) {
 <!DOCTYPE html>
 <html>
 <head>
-<title>LJC CPCC System v3.9.2</title>
+<title>LJC CPCC System v3.9.3</title>
 
 <!-- Inter Font -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -482,7 +482,7 @@ body.history-open #historyContainer {
 
 const API_KEY = "CPCC_LJC_2026_PRIVATE_KEY";
 const TERMINAL_URL =
-  "https://script.google.com/macros/s/AKfycbxfWgT-7vbiA5dSBQyeyUVcE5OWAl3-yP0khWrHM0m-JHWuJROGANPtV_Oy_KNo6X5w8w/exec";
+  "https://script.google.com/macros/s/AKfycbzp0Bu7Ir-oD2a6ACenh4r3XyGJsbyQdynyr6sSYIovTf9olOooCu_DVUfaWyvSU40i/exec";
 
 const TERMINAL_ID = "ABE_TRINOMA_POS01";
 const FIXED_OUTLET = "ABE Trinoma";
@@ -552,10 +552,6 @@ window.startApp = function() {
   fetchMenu();
 };
 
-/* ============================= */
-/* PIN VALIDATION (JSONP)        */
-/* ============================= */
-
 function terminalPinCallback(res) {
   if (!res.ok) {
     alert("PIN server unreachable");
@@ -563,20 +559,27 @@ function terminalPinCallback(res) {
   }
 
   if (res.valid) {
-   // ✅ Success: hide countdown if visible
-    document.getElementById("lockTimer").style.display = "none";
+    // ✅ Hide the PIN modal
+    const pinModal = document.getElementById("pinModal");
+    if (pinModal) pinModal.style.display = "none";
+
+    // ✅ Hide countdown if visible
+    const lockDiv = document.getElementById("lockTimer");
+    if (lockDiv) lockDiv.style.display = "none";
+
+    // ✅ Start the app
     startApp();
     return;
   }
 
   if (res.error === "LOCKED") {
     alert(`Too many attempts. Try again in ${res.retryAfterMinutes} minutes.`);
-    return;
-  }
 
-  if (res.error === "LOCKED") {
-    const totalSeconds = res.retryAfterMinutes * 60;
-    startLockCountdown(totalSeconds);
+    // ✅ Start lock countdown if you have a lock timer UI
+    if (res.retryAfterMinutes) {
+      const totalSeconds = res.retryAfterMinutes * 60;
+      startLockCountdown(totalSeconds);
+    }
     return;
   }
 
@@ -585,8 +588,10 @@ function terminalPinCallback(res) {
     return;
   }
 
+  // ❌ Default: wrong PIN
   alert("Incorrect PIN");
 }
+
 
 
 // === new lock countdown function === //
@@ -691,8 +696,27 @@ async function updateCPCC() {
     return;
   }
 
-  const data = await res.json();
-  
+  let json;
+  try {
+    json = await res.json();
+  } catch {
+    alert("Invalid response from CPCC server.");
+    return;
+  }
+
+  // 🔹 Safely extract the data array
+  const data = Array.isArray(json) 
+    ? json 
+    : Array.isArray(json.cpccData) 
+      ? json.cpccData 
+      : [];
+
+  if (!data.length) {
+    liveCPCCUsed = 0;
+    render();
+    cpccFresh = true;
+    return;
+  }
 
   const month = getMonthKey(date.value);
   liveCPCCUsed = 0;
@@ -709,9 +733,8 @@ async function updateCPCC() {
 
   render();
   cpccFresh = true;
-
-
 }
+
 
 
 function cpccUsersCallback(data) {
